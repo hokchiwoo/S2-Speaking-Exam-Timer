@@ -2,288 +2,148 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>S2 Speaking Exam</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Speaking Exam Timer</title>
 <style>
   *{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; }
+  html,body{ height:100%; width:100%; }
   body{
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
     background:#ffffff;
     color:#111111;
     -webkit-font-smoothing:antialiased;
     display:flex;
     flex-direction:column;
-    min-height:100vh;
+    height:100vh;
+    width:100vw;
+    overflow:hidden;
   }
 
-  /* ---- Swiss grid frame ---- */
   .topbar{
+    flex:0 0 auto;
     border-bottom:2px solid #111;
     display:flex;
     justify-content:space-between;
-    align-items:baseline;
-    padding:16px 28px;
+    align-items:center;
+    padding:1.4vmin 3vmin;
   }
-  .topbar .mark{
-    font-weight:700;
-    font-size:14px;
-    letter-spacing:.5px;
-    text-transform:uppercase;
-  }
+  .topbar .mark{ font-weight:700; font-size:1.8vmin; letter-spacing:.5px; text-transform:uppercase; }
   .topbar .mark .dot{ color:#e2231a; }
-  .topbar .step{
-    font-size:12px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    color:#666;
+  .topbar .right{ display:flex; align-items:center; gap:2.5vmin; }
+  .topbar .step{ font-size:1.5vmin; letter-spacing:2px; text-transform:uppercase; color:#666; }
+  .ttsToggle{
+    cursor:pointer; border:2px solid #111; background:#fff; color:#111; font-family:inherit;
+    font-size:1.5vmin; letter-spacing:1px; text-transform:uppercase; font-weight:700;
+    padding:.9vmin 1.6vmin; display:flex; align-items:center; gap:.8vmin;
   }
+  .ttsToggle.off{ background:#fff; color:#999; border-color:#bbb; }
+  .ttsToggle .ico{ font-size:1.9vmin; }
 
-  main{
-    flex:1;
-    display:grid;
-    grid-template-columns: 1fr;
-    align-content:center;
-    padding:48px 28px;
-    max-width:1100px;
-    width:100%;
-    margin:0 auto;
-  }
+  main{ flex:1 1 auto; position:relative; min-height:0; width:100%; max-width:1100px; margin:0 auto; }
+  section{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:3vmin 4vmin; }
 
   .eyebrow{
-    font-size:13px;
-    letter-spacing:3px;
-    text-transform:uppercase;
-    color:#e2231a;
-    font-weight:700;
-    margin-bottom:20px;
-    display:flex;
-    align-items:center;
-    gap:14px;
+    font-size:1.7vmin; letter-spacing:3px; text-transform:uppercase; color:#e2231a; font-weight:700;
+    margin-bottom:2vmin; display:flex; align-items:center; gap:1.4vmin;
   }
-  .eyebrow::before{
-    content:"";
-    width:44px;
-    height:6px;
-    background:#e2231a;
-    display:inline-block;
-  }
+  .eyebrow::before{ content:""; width:5vmin; height:.8vmin; background:#e2231a; display:inline-block; }
 
-  h1{
-    font-size: clamp(34px, 6vw, 72px);
-    font-weight:700;
-    line-height:.98;
-    letter-spacing:-1.5px;
-    margin-bottom:28px;
-    max-width:16ch;
-  }
+  h1{ font-size:7vmin; font-weight:700; line-height:.98; letter-spacing:-1.5px; margin-bottom:2.5vmin; max-width:16ch; }
+  p.lead{ font-size:2.8vmin; line-height:1.4; max-width:46ch; color:#111; margin-bottom:1.4vmin; }
+  p.lead strong{ font-weight:700; }
 
-  p.lead{
-    font-size: clamp(17px, 2.4vw, 24px);
-    line-height:1.45;
-    max-width:46ch;
-    color:#111;
-    margin-bottom:14px;
-  }
+  .cue{ margin-top:3.5vmin; display:flex; align-items:center; gap:1.6vmin; font-size:1.8vmin; letter-spacing:1px; text-transform:uppercase; color:#444; }
+  .key{ border:2px solid #111; padding:1vmin 2vmin; font-weight:700; font-size:1.6vmin; letter-spacing:1.5px; background:#111; color:#fff; }
 
-  /* ---- Standard small cue ---- */
-  .cue{
-    margin-top:36px;
-    display:flex;
-    align-items:center;
-    gap:16px;
-    font-size:14px;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    color:#444;
-  }
-  .key{
-    border:2px solid #111;
-    padding:8px 16px;
-    font-weight:700;
-    font-size:13px;
-    letter-spacing:1.5px;
-    background:#111;
-    color:#fff;
-  }
-
-  /* ---- BIG noticeable prompt (req 8) ---- */
   .cue-big{
-    margin-top:40px;
-    display:flex;
-    align-items:center;
-    gap:24px;
-    flex-wrap:wrap;
-    border:4px solid #e2231a;
-    background:#fff;
-    padding:24px 32px;
+    margin-top:4vmin; display:inline-flex; align-items:center; justify-content:center; gap:2vmin;
+    border:.6vmin solid #e2231a; background:#fff; padding:2.4vmin 3.4vmin; align-self:flex-start;
     animation:pulseBox 1.1s ease-in-out infinite;
   }
   @keyframes pulseBox{
     0%,100%{ box-shadow:0 0 0 0 rgba(226,35,26,.55); transform:scale(1); }
-    50%    { box-shadow:0 0 0 14px rgba(226,35,26,0); transform:scale(1.015); }
+    50%    { box-shadow:0 0 0 2vmin rgba(226,35,26,0); transform:scale(1.015); }
   }
-  .cue-big .key-big{
-    background:#e2231a;
-    color:#fff;
-    font-weight:700;
-    font-size: clamp(26px, 4vw, 46px);
-    letter-spacing:2px;
-    padding:14px 30px;
-    text-transform:uppercase;
-    line-height:1;
-    white-space:nowrap;
-  }
-  .cue-big .key-text{
-    font-size: clamp(22px, 3.4vw, 40px);
-    font-weight:700;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    color:#111;
-    line-height:1.1;
-  }
+  .cue-big .key-text{ font-size:3.4vmin; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#111; line-height:1.1; }
+  .cue-big .key-text em{ font-style:normal; color:#e2231a; }
 
-  /* ---- Static notice (req 9: no flashing) ---- */
   .cue-static{
-    margin-top:40px;
-    border:4px solid #111;
-    background:#111;
-    color:#fff;
-    padding:24px 32px;
-    font-size: clamp(20px, 3.2vw, 38px);
-    font-weight:700;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    line-height:1.15;
+    margin-top:4vmin; border:.6vmin solid #111; background:#111; color:#fff; padding:2.4vmin 3.4vmin;
+    font-size:3.2vmin; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.15; align-self:flex-start;
   }
 
-  /* fade-in (no looping flash) used when delayed cue appears */
   .fade-in{ animation:fadeIn .4s ease-out both; }
   @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
-  /* ---- Timer ---- */
-  .timerRow{
-    display:grid;
-    grid-template-columns:auto 1fr;
-    align-items:center;
-    gap:36px;
-    margin-top:8px;
-  }
-  @media (max-width:680px){
-    .timerRow{ grid-template-columns:1fr; gap:18px; }
-  }
-  .timerBig{
-    font-size: clamp(90px, 20vw, 220px);
-    font-weight:700;
-    letter-spacing:-6px;
-    line-height:.8;
-    font-variant-numeric: tabular-nums;
-  }
+  .timerRow{ display:grid; grid-template-columns:auto 1fr; align-items:center; gap:4vmin; }
+  .timerBig{ font-size:22vmin; font-weight:700; letter-spacing:-1vmin; line-height:.8; font-variant-numeric:tabular-nums; }
   .timerBig.alarm{ color:#e2231a; }
-  .timerMeta{
-    border-top:2px solid #111;
-    padding-top:14px;
-  }
-  .timerMeta .label{
-    font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#666;
-  }
-  .timerMeta .val{ font-size:22px; font-weight:700; margin-top:4px; }
+  .timerMeta{ border-top:2px solid #111; padding-top:1.6vmin; }
+  .timerMeta .label{ font-size:1.5vmin; letter-spacing:2px; text-transform:uppercase; color:#666; }
+  .timerMeta .val{ font-size:2.6vmin; font-weight:700; margin-top:.4vmin; }
 
-  /* ---- Wheel ---- */
-  .wheelStage{
-    position:relative;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-  }
-  /* white-outlined pointer so it stays visible over any slice colour */
-  .pointer{
-    position:absolute;
-    top:-10px;
-    left:50%;
-    transform:translateX(-50%);
-    width:0; height:0;
-    z-index:2;
-  }
-  .pointer::before{
-    content:"";
-    position:absolute;
-    left:-20px; top:-4px;
-    width:0; height:0;
-    border-left:20px solid transparent;
-    border-right:20px solid transparent;
-    border-top:34px solid #ffffff;
-  }
-  .pointer::after{
-    content:"";
-    position:absolute;
-    left:-13px; top:0;
-    width:0; height:0;
-    border-left:13px solid transparent;
-    border-right:13px solid transparent;
-    border-top:24px solid #111111;
-  }
-  canvas{
-    width:min(380px, 80vw);
-    height:auto;
-    aspect-ratio:1/1;
-  }
-  .partbLayout{
-    display:grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap:40px;
-    align-items:center;
-  }
-  @media (max-width:760px){
-    .partbLayout{ grid-template-columns:1fr; }
-  }
-  .topicResult{
-    font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#666;
-    margin-bottom:6px;
-  }
-  .topicNum{
-    font-size: clamp(70px, 14vw, 150px);
-    font-weight:700;
-    letter-spacing:-4px;
-    line-height:.85;
-  }
+  .partbLayout{ display:grid; grid-template-columns:1fr 1fr; gap:5vmin; align-items:center; }
+  .wheelStage{ position:relative; display:flex; justify-content:center; align-items:center; }
+  .pointer{ position:absolute; top:-1.2vmin; left:50%; transform:translateX(-50%); width:0; height:0; z-index:2; }
+  .pointer::before{ content:""; position:absolute; left:-2.2vmin; top:-.4vmin; width:0; height:0; border-left:2.2vmin solid transparent; border-right:2.2vmin solid transparent; border-top:3.8vmin solid #ffffff; }
+  .pointer::after{ content:""; position:absolute; left:-1.4vmin; top:0; width:0; height:0; border-left:1.4vmin solid transparent; border-right:1.4vmin solid transparent; border-top:2.6vmin solid #111111; }
+  canvas{ width:42vmin; height:42vmin; max-width:100%; }
+  .topicResult{ font-size:1.5vmin; letter-spacing:2px; text-transform:uppercase; color:#666; margin-bottom:.6vmin; }
+  .topicNum{ font-size:16vmin; font-weight:700; letter-spacing:-1vmin; line-height:.85; }
+  #screen-partB-spin .timerBig{ font-size:14vmin; }
 
-  /* footer */
-  .footer{
-    border-top:2px solid #111;
-    padding:14px 28px;
-    display:flex;
-    justify-content:space-between;
-    font-size:11px;
-    letter-spacing:1.5px;
-    text-transform:uppercase;
-    color:#888;
-  }
+  #screen-menu .menuGrid{ display:grid; grid-template-columns:1fr 1fr; gap:4vmin; margin-top:3vmin; }
+  .examBtn{ cursor:pointer; border:.6vmin solid #111; background:#fff; padding:5vmin 3vmin; text-align:left; transition:.18s; font-family:inherit; }
+  .examBtn:hover, .examBtn:focus{ background:#111; color:#fff; outline:none; }
+  .examBtn:hover .examBtn-sub, .examBtn:focus .examBtn-sub{ color:#ddd; }
+  .examBtn .examBtn-key{ font-size:1.5vmin; letter-spacing:2px; text-transform:uppercase; color:#e2231a; font-weight:700; margin-bottom:1.2vmin; }
+  .examBtn .examBtn-title{ font-size:6vmin; font-weight:700; line-height:.95; letter-spacing:-1px; }
+  .examBtn .examBtn-sub{ font-size:2vmin; margin-top:1.2vmin; color:#666; }
 
+  .footer{ flex:0 0 auto; border-top:2px solid #111; padding:1.2vmin 3vmin; display:flex; justify-content:space-between; font-size:1.4vmin; letter-spacing:1.5px; text-transform:uppercase; color:#888; }
   .hidden{ display:none !important; }
 </style>
 </head>
 <body>
 
   <div class="topbar">
-    <div class="mark">S2 Speaking Exam<span class="dot">.</span></div>
-    <div class="step" id="stepLabel">Welcome</div>
+    <div class="mark"><span id="examTitle">Speaking Exam</span><span class="dot">.</span></div>
+    <div class="right">
+      <button class="ttsToggle" id="ttsToggle" title="Toggle voice instructions">
+        <span class="ico" id="ttsIco">🔊</span><span id="ttsLbl">Voice on</span>
+      </button>
+      <div class="step" id="stepLabel">Select Exam</div>
+    </div>
   </div>
 
   <main id="main">
 
-    <!-- 1. WELCOME -->
-    <section id="screen-welcome">
-      <div class="eyebrow">Examination</div>
-      <h1>S2 Speaking Exam</h1>
-      <p class="lead">Please wait for the examiner's instructions before you begin.</p>
-      <div class="cue-big">
-        <span class="key-big">Enter</span>
-        <span class="key-text">Press to continue</span>
+    <section id="screen-menu">
+      <div class="eyebrow">Examiner Setup</div>
+      <h1>Choose the timer</h1>
+      <div class="menuGrid">
+        <button class="examBtn" id="btnS1">
+          <div class="examBtn-key">Press 1 or tap</div>
+          <div class="examBtn-title">S1</div>
+          <div class="examBtn-sub">Speaking Exam · Reading aloud + presentation</div>
+        </button>
+        <button class="examBtn" id="btnS2">
+          <div class="examBtn-key">Press 2 or tap</div>
+          <div class="examBtn-title">S2</div>
+          <div class="examBtn-sub">Speaking Exam · With topic lucky draw</div>
+        </button>
       </div>
     </section>
 
-    <!-- 2. PART A INTRO (has reading instructions → 5s delay before prompt) -->
+    <section id="screen-welcome" class="hidden">
+      <div class="eyebrow">Examination</div>
+      <h1 id="welcomeTitle">Speaking Exam</h1>
+      <p class="lead">Please wait for the examiner's instructions before you begin.</p>
+      <div class="cue-big hidden" id="cueWelcome">
+        <span class="key-text">Press <em>Return / Enter</em> on the keyboard to continue</span>
+      </div>
+    </section>
+
     <section id="screen-partA-intro" class="hidden">
       <div class="eyebrow">Part A</div>
       <h1>Reading Aloud</h1>
@@ -292,40 +152,34 @@
         You do not need to finish the whole passage.
       </p>
       <div class="cue-big hidden" id="cuePartAIntro">
-        <span class="key-big">Enter</span>
-        <span class="key-text">Press when you are ready</span>
+        <span class="key-text">Press <em>Return / Enter</em> on the keyboard to continue</span>
       </div>
     </section>
 
-    <!-- 2b. PART A TIMER -->
     <section id="screen-partA-timer" class="hidden">
       <div class="eyebrow">Part A · Reading Aloud</div>
       <div class="timerRow">
         <div class="timerBig" id="timerA">01:00</div>
         <div class="timerMeta">
           <div class="label">Status</div>
-          <div class="val" id="statusA">Reading in progress…</div>
+          <div class="val" id="statusA">Get ready…</div>
         </div>
       </div>
-      <!-- req 9: static, non-flashing examiner notice -->
       <div class="cue-static hidden" id="cueA">Please wait for the examiner to continue</div>
     </section>
 
-    <!-- 3. PART B INTRO (has eye-contact reminder → 5s delay before prompt) -->
     <section id="screen-partB-intro" class="hidden">
       <div class="eyebrow">Part B</div>
       <h1>Individual Presentation</h1>
       <p class="lead">
-        You will have <strong>one minute and thirty seconds</strong> to give a presentation
+        You will have <strong>one and a half minutes</strong> to give a presentation
         about your topic. Please maintain eye contact and speak loudly.
       </p>
       <div class="cue-big hidden" id="cuePartBIntro">
-        <span class="key-big">Enter</span>
-        <span class="key-text">Press to draw your topic</span>
+        <span class="key-text" id="cuePartBIntroText">Press <em>Return / Enter</em> on the keyboard to continue</span>
       </div>
     </section>
 
-    <!-- 3b. PART B SPIN + TIMER -->
     <section id="screen-partB-spin" class="hidden">
       <div class="eyebrow">Part B · Individual Presentation</div>
       <div class="partbLayout">
@@ -336,69 +190,81 @@
         <div>
           <div class="topicResult">Your Topic</div>
           <div class="topicNum" id="topicNum">—</div>
-          <div class="timerRow" style="margin-top:30px;">
+          <div class="timerRow" style="margin-top:3vmin; grid-template-columns:1fr;">
             <div class="timerBig" id="timerB">01:30</div>
           </div>
-          <div class="timerMeta" style="margin-top:18px;">
+          <div class="timerMeta" style="margin-top:2vmin;">
             <div class="label">Status</div>
             <div class="val" id="statusB">Drawing topic…</div>
           </div>
         </div>
       </div>
-      <div class="cue-big hidden" id="cueB">
-        <span class="key-big">Enter</span>
-        <span class="key-text" id="cueBtext">Press to start the timer</span>
+      <div class="cue-big hidden" id="cueB" style="margin-top:3vmin;">
+        <span class="key-text" id="cueBtext">Press <em>Return / Enter</em> on the keyboard to continue</span>
       </div>
     </section>
 
-    <!-- 4. END -->
+    <section id="screen-partB-timer-s1" class="hidden">
+      <div class="eyebrow">Part B · Individual Presentation</div>
+      <div class="timerRow">
+        <div class="timerBig" id="timerBS1">01:30</div>
+        <div class="timerMeta">
+          <div class="label">Status</div>
+          <div class="val" id="statusBS1">Get ready…</div>
+        </div>
+      </div>
+      <div class="cue-big hidden" id="cueBS1" style="margin-top:3vmin;">
+        <span class="key-text" id="cueBS1text">Press <em>Return / Enter</em> on the keyboard to continue</span>
+      </div>
+    </section>
+
     <section id="screen-end" class="hidden">
       <div class="eyebrow">Finished</div>
       <h1>End of Exam</h1>
       <p class="lead">This is the end of the speaking exam.</p>
       <p class="lead">Please hand in your note sheet to the examiner. You may now leave.</p>
       <div class="cue">
-        <span class="key">Enter</span> Examiner: press to restart
+        <span class="key">Return / Enter</span> Examiner: press to restart
       </div>
     </section>
 
   </main>
 
   <div class="footer">
-    <span>S2 Speaking Exam</span>
-    <span>S2 Speaking Exam</span>
+    <span id="footL">Speaking Exam</span>
+    <span id="footR">Speaking Exam</span>
   </div>
 
 <script>
-  /* ---------------- Screen state machine ---------------- */
   const screens = {
+    menu:        document.getElementById('screen-menu'),
     welcome:     document.getElementById('screen-welcome'),
     partAIntro:  document.getElementById('screen-partA-intro'),
     partATimer:  document.getElementById('screen-partA-timer'),
     partBIntro:  document.getElementById('screen-partB-intro'),
     partBSpin:   document.getElementById('screen-partB-spin'),
+    partBTimerS1:document.getElementById('screen-partB-timer-s1'),
     end:         document.getElementById('screen-end'),
   };
   const stepLabel = document.getElementById('stepLabel');
-  let state = 'welcome';
+  let state = 'menu';
+  let examType = null;
 
-  // When true, Enter is ignored (prevents skipping running timers, spin, or
-  // the 5-second instruction-reading delay)
   let advanceLocked = false;
-
-  // Sub-stage inside Part B: 'idle' -> 'spun' -> 'timing' -> 'done'
   let partBStage = 'idle';
-
-  // Holds any pending "delayed prompt" timeout so we can cancel it on reset
   let delayTimeout = null;
 
+  const SAY_CONTINUE  = 'Press return or enter on the keyboard to continue.';
+  const SAY_START     = 'Press return or enter on the keyboard to start the timer.';
+  const SAY_GO        = 'You may start now.';
+  const SAY_READ      = 'You may begin reading now.';
+  const SAY_PARTA     = 'Part A. Reading aloud. You will have one minute to read aloud the passage provided. You do not need to finish the whole passage.';
+  const SAY_PARTB     = 'Part B. Individual presentation. You will have one and a half minutes to give a presentation about your topic. Please maintain eye contact and speak loudly.';
+  const SAY_WAIT      = 'Please wait for the examiner to continue.';
+
   const stepNames = {
-    welcome:    'Welcome',
-    partAIntro: 'Part A',
-    partATimer: 'Part A · Timer',
-    partBIntro: 'Part B',
-    partBSpin:  'Part B · Topic',
-    end:        'Complete',
+    menu:'Select Exam', welcome:'Welcome', partAIntro:'Part A', partATimer:'Part A · Timer',
+    partBIntro:'Part B', partBSpin:'Part B · Topic', partBTimerS1:'Part B · Timer', end:'Complete',
   };
 
   function show(name){
@@ -408,23 +274,80 @@
     state = name;
   }
 
-  // req 10: lock advancing, then reveal the prompt after 5s of reading time
-  function showCueAfterDelay(cueEl, ms){
-    if(delayTimeout) clearTimeout(delayTimeout);
+  /* ---------------- TTS ---------------- */
+  let ttsOn = true;
+  const synth = window.speechSynthesis || null;
+  function speak(text){
+    if(!ttsOn || !synth) return;
+    try{
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-GB'; u.rate = 0.95; u.pitch = 1.0;
+      synth.speak(u);
+    }catch(e){}
+  }
+  function speakSeq(first, second){
+    if(!ttsOn || !synth){ return; }
+    try{
+      synth.cancel();
+      const u1 = new SpeechSynthesisUtterance(first);
+      u1.lang='en-GB'; u1.rate=0.95; u1.pitch=1.0;
+      const u2 = new SpeechSynthesisUtterance(second);
+      u2.lang='en-GB'; u2.rate=0.95; u2.pitch=1.0;
+      synth.speak(u1); synth.speak(u2);
+    }catch(e){}
+  }
+  /* speak text, then run done() when speech finishes */
+  function speakThen(text, done){
+    if(!ttsOn || !synth){ if(done) done(); return; }
+    try{
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang='en-GB'; u.rate=0.95; u.pitch=1.0;
+      let fired=false;
+      const fire=()=>{ if(!fired){ fired=true; if(done) done(); } };
+      u.onend = fire;
+      u.onerror = fire;
+      setTimeout(fire, Math.max(2000, text.length*95)); // fallback if onend doesn't fire
+      synth.speak(u);
+    }catch(e){ if(done) done(); }
+  }
+  function stopSpeak(){ if(synth){ try{ synth.cancel(); }catch(e){} } }
+
+  const ttsBtn = document.getElementById('ttsToggle');
+  ttsBtn.addEventListener('click', ()=>{
+    ttsOn = !ttsOn;
+    document.getElementById('ttsIco').textContent = ttsOn ? '🔊' : '🔇';
+    document.getElementById('ttsLbl').textContent = ttsOn ? 'Voice on' : 'Voice off';
+    ttsBtn.classList.toggle('off', !ttsOn);
+    if(!ttsOn) stopSpeak();
+  });
+
+  /* ---- Reveal a prompt after instruction speech finishes (or 5s if voice off) ---- */
+  function announceInstruction(instructionText, cueEl, promptText){
+    if(delayTimeout){ clearTimeout(delayTimeout); delayTimeout = null; }
     advanceLocked = true;
     cueEl.classList.add('hidden');
-    delayTimeout = setTimeout(()=>{
-      cueEl.classList.remove('hidden');
-      cueEl.classList.add('fade-in');
-      advanceLocked = false;
-      delayTimeout = null;
-    }, ms);
+    if(ttsOn && synth){
+      speakThen(instructionText, ()=>{
+        cueEl.classList.remove('hidden');
+        cueEl.classList.add('fade-in');
+        advanceLocked = false;
+        speak(promptText);
+      });
+    } else {
+      delayTimeout = setTimeout(()=>{
+        cueEl.classList.remove('hidden');
+        cueEl.classList.add('fade-in');
+        advanceLocked = false;
+        delayTimeout = null;
+      }, 5000);
+    }
   }
 
   /* ---------------- Audio (beep) ---------------- */
   const BEEP_AUTO_STOP_MS = 5000;
   let audioCtx = null, beepInterval = null, beepStopTimeout = null;
-
   function ensureAudio(){
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -451,7 +374,7 @@
     beepStopTimeout = setTimeout(stopBeep, BEEP_AUTO_STOP_MS);
   }
 
-  /* ---------------- Timer engine ---------------- */
+  /* ---------------- Timer ---------------- */
   let timerInterval = null, timerEndsAt = null;
   function fmt(t){
     const s = Math.max(0, Math.ceil(t));
@@ -461,7 +384,6 @@
     if(timerInterval) clearInterval(timerInterval);
     timerInterval = null; timerEndsAt = null;
   }
-  // runTimer locks advancing until the countdown completes, then runs onDone()
   function runTimer(totalSeconds, displayEl, statusEl, runningText, onDone){
     stopTimer(); stopBeep();
     advanceLocked = true;
@@ -475,9 +397,8 @@
         displayEl.textContent = '00:00';
         displayEl.classList.add('alarm');
         if(statusEl) statusEl.textContent = "Time's up";
-        stopTimer();
-        startBeepLoop();
-        advanceLocked = false;   // may now continue
+        stopTimer(); startBeepLoop();
+        advanceLocked = false;
         if(onDone) onDone();
       } else {
         displayEl.textContent = fmt(left);
@@ -485,24 +406,21 @@
     }, 200);
   }
 
-  /* ---------------- Wheel ---------------- */
+  /* ---------------- Wheel (S2) ---------------- */
   const canvas = document.getElementById('wheel');
   const ctx = canvas.getContext('2d');
-  const slices = [
-    { label:'1', color:'#e2231a' },
-    { label:'2', color:'#111111' },
-  ];
+  const slices = [ { label:'1', color:'#e2231a' }, { label:'2', color:'#111111' } ];
   let rotation = 0, spinning = false;
 
   function drawWheel(rot = rotation){
     const w=canvas.width, h=canvas.height, cx=w/2, cy=h/2, r=Math.min(w,h)*0.46;
     ctx.clearRect(0,0,w,h);
     ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot);
-    const per = (Math.PI*2)/slices.length;
+    const per=(Math.PI*2)/slices.length;
     for(let i=0;i<slices.length;i++){
       const start=i*per, end=start+per;
       ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,start,end); ctx.closePath();
-      ctx.fillStyle = slices[i].color; ctx.fill();
+      ctx.fillStyle=slices[i].color; ctx.fill();
       ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(start)*r, Math.sin(start)*r);
       ctx.strokeStyle='#fff'; ctx.lineWidth=6; ctx.stroke();
       const mid=(start+end)/2;
@@ -524,18 +442,14 @@
 
   function spinWheel(){
     if(spinning) return;
-    spinning = true;
-    advanceLocked = true;          // locked during the spin animation
-    partBStage = 'idle';
+    spinning = true; advanceLocked = true; partBStage = 'idle';
     document.getElementById('statusB').textContent = 'Drawing topic…';
     document.getElementById('topicNum').textContent = '…';
     document.getElementById('cueB').classList.add('hidden');
 
     const tp=Math.PI*2, per=tp/slices.length;
-    // Decide the winning slice up front; this value is what we display.
     const chosen = Math.random()<0.5 ? 0 : 1;
     const mid=(chosen+0.5)*per;
-    // Land slice centre under the pointer (top, -90°)
     let target = (-Math.PI/2) - mid + 9*tp;
     while(target < rotation + 2*tp) target += tp;
     const startRot=rotation, delta=target-startRot, dur=3000, t0=performance.now();
@@ -547,117 +461,176 @@
       if(t<1){ requestAnimationFrame(frame); }
       else {
         spinning=false;
-        // Display the pre-chosen number — it never changes after this.
-        document.getElementById('topicNum').textContent = slices[chosen].label;
+        const num = slices[chosen].label;
+        document.getElementById('topicNum').textContent = num;
         document.getElementById('statusB').textContent = 'Topic drawn — ready to start';
-        // Wait for the student to press Enter to start the timer.
-        partBStage = 'spun';
-        advanceLocked = false;
-        document.getElementById('cueBtext').textContent = 'Press to start the timer';
+        partBStage = 'spun'; advanceLocked = false;
+        document.getElementById('cueBtext').innerHTML =
+          'Press <em>Return / Enter</em> on the keyboard to start the timer';
         document.getElementById('cueB').classList.remove('hidden');
+        speakSeq('Your topic is number ' + num + '.', SAY_START);
       }
     }
     requestAnimationFrame(frame);
   }
 
-  function startPresentationTimer(){
+  function startReadingTimer(){
+    advanceLocked = true;
+    document.getElementById('cueA').classList.add('hidden');
+    document.getElementById('statusA').textContent = 'Get ready…';
+    speakThen(SAY_READ, ()=>{
+      runTimer(60, document.getElementById('timerA'),
+        document.getElementById('statusA'), 'Reading in progress…',
+        () => {
+          document.getElementById('cueA').classList.remove('hidden');
+          speak(SAY_WAIT);
+        });
+    });
+  }
+
+  function startPresentationTimerS2(){
     partBStage = 'timing';
+    advanceLocked = true;
     document.getElementById('cueB').classList.add('hidden');
-    runTimer(
-      90,
-      document.getElementById('timerB'),
-      document.getElementById('statusB'),
-      'Presentation in progress…',
-      () => {
-        partBStage = 'done';
-        document.getElementById('cueBtext').textContent = 'Press to continue';
-        document.getElementById('cueB').classList.remove('hidden');
-      }
+    document.getElementById('statusB').textContent = 'Get ready…';
+    speakThen(SAY_GO, ()=>{
+      runTimer(90, document.getElementById('timerB'),
+        document.getElementById('statusB'), 'Presentation in progress…',
+        () => {
+          partBStage = 'done';
+          document.getElementById('cueBtext').innerHTML =
+            'Press <em>Return / Enter</em> on the keyboard to continue';
+          document.getElementById('cueB').classList.remove('hidden');
+          speak(SAY_CONTINUE);
+        });
+    });
+  }
+
+  function startPresentationTimerS1(){
+    partBStage = 'timing';
+    advanceLocked = true;
+    document.getElementById('cueBS1').classList.add('hidden');
+    document.getElementById('statusBS1').textContent = 'Get ready…';
+    speakThen(SAY_GO, ()=>{
+      runTimer(90, document.getElementById('timerBS1'),
+        document.getElementById('statusBS1'), 'Presentation in progress…',
+        () => {
+          partBStage = 'done';
+          document.getElementById('cueBS1text').innerHTML =
+            'Press <em>Return / Enter</em> on the keyboard to continue';
+          document.getElementById('cueBS1').classList.remove('hidden');
+          speak(SAY_CONTINUE);
+        });
+    });
+  }
+
+  /* ---------------- Exam selection ---------------- */
+  function chooseExam(type){
+    examType = type;
+    const titleFull = type + ' Speaking Exam';
+    document.getElementById('examTitle').textContent = titleFull;
+    document.getElementById('welcomeTitle').textContent = titleFull;
+    document.getElementById('footL').textContent = titleFull;
+    document.getElementById('footR').textContent = titleFull;
+    resetExamToStart();
+    announceInstruction(
+      'Welcome to the ' + type + ' speaking exam. Please wait for the examiner\'s instructions before you begin.',
+      document.getElementById('cueWelcome'),
+      SAY_CONTINUE
     );
   }
 
-  /* ---------------- Reset to page 1 ---------------- */
-  function resetApp(){
-    stopTimer();
-    stopBeep();
+  function resetExamToStart(){
+    stopTimer(); stopBeep(); stopSpeak();
     if(delayTimeout){ clearTimeout(delayTimeout); delayTimeout = null; }
-    spinning = false;
-    advanceLocked = false;
-    partBStage = 'idle';
-    rotation = 0;
-    drawWheel(rotation);
+    spinning = false; advanceLocked = false; partBStage = 'idle';
+    rotation = 0; drawWheel(rotation);
+    document.getElementById('cueWelcome').classList.add('hidden');
     document.getElementById('timerA').textContent = '01:00';
     document.getElementById('timerA').classList.remove('alarm');
-    document.getElementById('statusA').textContent = 'Reading in progress…';
+    document.getElementById('statusA').textContent = 'Get ready…';
     document.getElementById('cueA').classList.add('hidden');
     document.getElementById('cuePartAIntro').classList.add('hidden');
     document.getElementById('cuePartBIntro').classList.add('hidden');
+    document.getElementById('cuePartBIntroText').innerHTML =
+      'Press <em>Return / Enter</em> on the keyboard to continue';
     document.getElementById('timerB').textContent = '01:30';
     document.getElementById('timerB').classList.remove('alarm');
     document.getElementById('statusB').textContent = 'Drawing topic…';
     document.getElementById('cueB').classList.add('hidden');
     document.getElementById('topicNum').textContent = '—';
+    document.getElementById('timerBS1').textContent = '01:30';
+    document.getElementById('timerBS1').classList.remove('alarm');
+    document.getElementById('statusBS1').textContent = 'Get ready…';
+    document.getElementById('cueBS1').classList.add('hidden');
     show('welcome');
   }
 
-  /* ---------------- Flow control (Enter) ---------------- */
+  /* ---------------- Flow control ---------------- */
   function advance(){
-    if(advanceLocked) return; // cannot skip running timers / spin / reading delay
-
+    if(advanceLocked) return;
     switch(state){
       case 'welcome':
         show('partAIntro');
-        // req 10: give 5s to read the passage instructions first
-        showCueAfterDelay(document.getElementById('cuePartAIntro'), 5000);
+        announceInstruction(SAY_PARTA, document.getElementById('cuePartAIntro'), SAY_CONTINUE);
         break;
       case 'partAIntro':
-        show('partATimer');
-        ensureAudio();
-        document.getElementById('cueA').classList.add('hidden');
-        runTimer(
-          60,
-          document.getElementById('timerA'),
-          document.getElementById('statusA'),
-          'Reading in progress…',
-          () => { document.getElementById('cueA').classList.remove('hidden'); } // static notice
-        );
+        show('partATimer'); ensureAudio();
+        startReadingTimer();
         break;
       case 'partATimer':
         stopTimer(); stopBeep();
         show('partBIntro');
-        // req 10: give 5s to read the eye-contact reminder first
-        showCueAfterDelay(document.getElementById('cuePartBIntro'), 5000);
+        if(examType === 'S1'){
+          document.getElementById('cuePartBIntroText').innerHTML =
+            'Press <em>Return / Enter</em> on the keyboard to start the timer';
+        } else {
+          document.getElementById('cuePartBIntroText').innerHTML =
+            'Press <em>Return / Enter</em> on the keyboard to continue';
+        }
+        announceInstruction(SAY_PARTB, document.getElementById('cuePartBIntro'),
+          examType === 'S1' ? SAY_START : SAY_CONTINUE);
         break;
       case 'partBIntro':
-        show('partBSpin');
         ensureAudio();
-        drawWheel(rotation);
-        spinWheel();
-        break;
-      case 'partBSpin':
-        if(partBStage === 'spun'){
-          // req 7: student presses Enter to start the presentation timer.
-          startPresentationTimer();
-        } else if(partBStage === 'done'){
-          stopTimer(); stopBeep();
-          show('end');
+        if(examType === 'S2'){
+          show('partBSpin'); drawWheel(rotation); spinWheel();
+        } else {
+          show('partBTimerS1');
+          startPresentationTimerS1();
         }
         break;
+      case 'partBSpin':
+        if(partBStage === 'spun'){ startPresentationTimerS2(); }
+        else if(partBStage === 'done'){ stopTimer(); stopBeep(); show('end'); speakEnd(); }
+        break;
+      case 'partBTimerS1':
+        if(partBStage === 'done'){ stopTimer(); stopBeep(); show('end'); speakEnd(); }
+        break;
       case 'end':
-        resetApp();   // req 5: restart from page 1
+        resetExamToStart();
         break;
     }
   }
 
+  function speakEnd(){
+    speak('This is the end of the speaking exam. Please hand in your note sheet to the examiner. You may now leave.');
+  }
+
+  document.getElementById('btnS1').addEventListener('click', ()=>chooseExam('S1'));
+  document.getElementById('btnS2').addEventListener('click', ()=>chooseExam('S2'));
+
   window.addEventListener('keydown', e=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      advance();
+    if(state === 'menu'){
+      if(e.key === '1'){ e.preventDefault(); chooseExam('S1'); }
+      else if(e.key === '2'){ e.preventDefault(); chooseExam('S2'); }
+      return;
     }
+    if(e.key === 'Enter'){ e.preventDefault(); advance(); }
   });
 
   drawWheel(rotation);
-  show('welcome');
+  show('menu');
 </script>
 </body>
 </html>
