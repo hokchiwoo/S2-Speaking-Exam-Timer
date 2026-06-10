@@ -45,6 +45,7 @@
   .cue{ margin-top:3vmin; display:flex; align-items:center; gap:1.6vmin; font-size:1.8vmin; letter-spacing:1px; text-transform:uppercase; color:#444; }
   .key{ border:2px solid #111; padding:1vmin 2vmin; font-weight:700; font-size:1.6vmin; letter-spacing:1.5px; background:#111; color:#fff; }
 
+  /* unified pulse timing for ALL pulsing elements */
   .cue-big{
     margin-top:4vmin; display:inline-flex; align-items:center; justify-content:center; gap:2vmin;
     border:.6vmin solid #e2231a; background:#fff; padding:2.2vmin 3.2vmin; align-self:flex-start;
@@ -56,7 +57,7 @@
   }
   .cue-big .key-text{ font-size:3.2vmin; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#111; line-height:1.1; }
   .cue-big .key-text em{ font-style:normal; color:#e2231a; }
-  .cue-arrow{ font-size:4.4vmin; color:#e2231a; font-weight:700; line-height:1; animation:arrowB .85s ease-in-out infinite; }
+  .cue-arrow{ font-size:4.4vmin; color:#e2231a; font-weight:700; line-height:1; animation:arrowB 1.1s ease-in-out infinite; }
   @keyframes arrowB{ 0%,100%{ transform:translateX(0);} 50%{ transform:translateX(1vmin);} }
 
   .cue-static{
@@ -220,6 +221,7 @@
         <span class="cue-arrow">⮕</span>
         <span class="key-text" id="cueBtext">Press <em>Return</em> to continue</span>
       </div>
+      <div class="cue-static hidden" id="cueBwait" style="margin-top:3vmin;">Please wait for the examiner to continue</div>
     </section>
 
     <section id="screen-partB-timer-s1" class="hidden">
@@ -235,6 +237,7 @@
         <span class="cue-arrow">⮕</span>
         <span class="key-text" id="cueBS1text">Press <em>Return</em> to continue</span>
       </div>
+      <div class="cue-static hidden" id="cueBS1wait" style="margin-top:3vmin;">Please wait for the examiner to continue</div>
     </section>
 
     <section id="screen-end" class="hidden">
@@ -451,6 +454,11 @@
     if(timerInterval) clearInterval(timerInterval);
     timerInterval=null; timerEndsAt=null;
   }
+  /* show full reset time immediately on an element */
+  function presetTimer(displayEl, totalSeconds){
+    displayEl.classList.remove('alarm');
+    displayEl.textContent = fmt(totalSeconds);
+  }
   function runTimer(totalSeconds, displayEl, statusEl, runningText, onDone){
     stopTimer(); stopBeep();
     advanceLocked=true;
@@ -509,6 +517,8 @@
     document.getElementById('statusB').textContent='Drawing topic…';
     document.getElementById('topicNum').textContent='…';
     document.getElementById('cueB').classList.add('hidden');
+    document.getElementById('cueBwait').classList.add('hidden');
+    presetTimer(document.getElementById('timerB'), 90);
 
     const tp=Math.PI*2, per=tp/slices.length;
     const chosen=Math.random()<0.5?0:1;
@@ -539,6 +549,7 @@
   function startReadingTimer(){
     advanceLocked=true;
     document.getElementById('cueA').classList.add('hidden');
+    presetTimer(document.getElementById('timerA'), 60);
     document.getElementById('statusA').textContent='Get ready…';
     speakThen(SAY_READ, ()=>{
       runTimer(60, document.getElementById('timerA'),
@@ -553,15 +564,16 @@
   function startPresentationTimerS2(){
     partBStage='timing'; advanceLocked=true;
     document.getElementById('cueB').classList.add('hidden');
+    document.getElementById('cueBwait').classList.add('hidden');
+    presetTimer(document.getElementById('timerB'), 90);
     document.getElementById('statusB').textContent='Get ready…';
     speakThen(SAY_GO, ()=>{
       runTimer(90, document.getElementById('timerB'),
         document.getElementById('statusB'), 'Presentation in progress…',
         ()=>{
           partBStage='done';
-          document.getElementById('cueBtext').innerHTML='Press <em>Return</em> to continue';
-          document.getElementById('cueB').classList.remove('hidden');
-          speak(SAY_CONTINUE);
+          document.getElementById('cueBwait').classList.remove('hidden');
+          speak(SAY_WAIT);
         });
     });
   }
@@ -569,15 +581,16 @@
   function startPresentationTimerS1(){
     partBStage='timing'; advanceLocked=true;
     document.getElementById('cueBS1').classList.add('hidden');
+    document.getElementById('cueBS1wait').classList.add('hidden');
+    presetTimer(document.getElementById('timerBS1'), 90);
     document.getElementById('statusBS1').textContent='Get ready…';
     speakThen(SAY_GO, ()=>{
       runTimer(90, document.getElementById('timerBS1'),
         document.getElementById('statusBS1'), 'Presentation in progress…',
         ()=>{
           partBStage='done';
-          document.getElementById('cueBS1text').innerHTML='Press <em>Return</em> to continue';
-          document.getElementById('cueBS1').classList.remove('hidden');
-          speak(SAY_CONTINUE);
+          document.getElementById('cueBS1wait').classList.remove('hidden');
+          speak(SAY_WAIT);
         });
     });
   }
@@ -613,23 +626,22 @@
     spinning=false; advanceLocked=false; partBStage='idle';
     rotation=0; drawWheel(rotation);
     document.getElementById('cueWelcome').classList.add('hidden');
-    document.getElementById('timerA').textContent='01:00';
-    document.getElementById('timerA').classList.remove('alarm');
+    presetTimer(document.getElementById('timerA'), 60);
     document.getElementById('statusA').textContent='Get ready…';
     document.getElementById('cueA').classList.add('hidden');
     document.getElementById('cuePartAIntro').classList.add('hidden');
     document.getElementById('cuePartBIntro').classList.add('hidden');
     setPartBIntroText();
-    document.getElementById('timerB').textContent='01:30';
-    document.getElementById('timerB').classList.remove('alarm');
+    presetTimer(document.getElementById('timerB'), 90);
     document.getElementById('statusB').textContent='Drawing topic…';
     document.getElementById('cueB').classList.add('hidden');
+    document.getElementById('cueBwait').classList.add('hidden');
     document.getElementById('cueBtext').innerHTML='Press <em>Return</em> to continue';
     document.getElementById('topicNum').textContent='—';
-    document.getElementById('timerBS1').textContent='01:30';
-    document.getElementById('timerBS1').classList.remove('alarm');
+    presetTimer(document.getElementById('timerBS1'), 90);
     document.getElementById('statusBS1').textContent='Get ready…';
     document.getElementById('cueBS1').classList.add('hidden');
+    document.getElementById('cueBS1wait').classList.add('hidden');
     document.getElementById('cueBS1text').innerHTML='Press <em>Return</em> to continue';
     show('welcome');
   }
