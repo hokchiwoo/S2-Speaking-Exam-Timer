@@ -122,6 +122,28 @@
 
   .footer{ flex:0 0 auto; border-top:2px solid #111; padding:1.2vmin 3vmin; display:flex; justify-content:space-between; font-size:1.4vmin; letter-spacing:1.5px; text-transform:uppercase; color:#888; }
   .hidden{ display:none !important; }
+
+  /* ---- Hidden examiner override / jump menu ---- */
+  .jumpOverlay{
+    position:fixed; inset:0; background:rgba(17,17,17,.94); z-index:100;
+    display:flex; justify-content:center; align-items:center; padding:5vmin;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .jumpPanel{ background:#fff; border:.6vmin solid #e2231a; width:100%; max-width:60rem; padding:4vmin; }
+  .jumpHead{ display:flex; justify-content:space-between; align-items:baseline; border-bottom:2px solid #111; padding-bottom:2vmin; margin-bottom:3vmin; }
+  .jumpHead .t{ font-size:3.4vmin; font-weight:700; letter-spacing:-1px; }
+  .jumpHead .s{ font-size:1.5vmin; letter-spacing:2px; text-transform:uppercase; color:#e2231a; font-weight:700; }
+  .jumpGrid{ display:grid; grid-template-columns:1fr 1fr; gap:2vmin; }
+  .jumpBtn{
+    cursor:pointer; border:.4vmin solid #111; background:#fff; padding:2.4vmin; text-align:left;
+    font-family:inherit; display:flex; align-items:center; gap:2vmin; transition:.15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .jumpBtn:hover{ background:#111; color:#fff; }
+  .jumpBtn-num{ font-size:3vmin; font-weight:700; color:#e2231a; min-width:3vmin; }
+  .jumpBtn:hover .jumpBtn-num{ color:#fff; }
+  .jumpBtn-lbl{ font-size:2.2vmin; font-weight:700; letter-spacing:.5px; }
+  .jumpHint{ margin-top:3vmin; font-size:1.5vmin; letter-spacing:1px; text-transform:uppercase; color:#888; }
 </style>
 </head>
 <body>
@@ -260,6 +282,18 @@
     <span id="footR">S2 Speaking Exam</span>
   </div>
 
+  <!-- Hidden examiner override (Shift + Return) -->
+  <div class="jumpOverlay hidden" id="jumpOverlay" aria-hidden="true">
+    <div class="jumpPanel">
+      <div class="jumpHead">
+        <span class="t">Examiner Override</span>
+        <span class="s">Jump to stage</span>
+      </div>
+      <div class="jumpGrid" id="jumpGrid"></div>
+      <div class="jumpHint">Press a number key · Esc or Shift + Return to close</div>
+    </div>
+  </div>
+
 <script>
   const screens = {
     menu:        document.getElementById('screen-menu'),
@@ -278,12 +312,15 @@
   let advanceLocked = false;
   let partBStage = 'idle';
   let delayTimeout = null;
+  let jumpMenuOpen = false;
 
   const SAY_CONTINUE  = 'Press return to continue.';
   const SAY_START     = 'Press return to start the timer.';
   const SAY_GO        = 'You may start now.';
   const SAY_READ      = 'You may begin reading now.';
-  const SAY_PARTA     = 'Part A. Reading aloud. You will have one minute to read aloud the passage provided. You do not need to finish the whole passage.';
+  /* "Reeding" is a phonetic respelling so the TTS says the verb (reed-ing),
+     not the English town "Reading" (pronounced Redding). */
+  const SAY_PARTA     = 'Part A. Reeding aloud. You will have one minute to read aloud the passage provided. You do not need to finish the whole passage.';
   const SAY_PARTB     = 'Part B. Individual presentation. You will have one and a half minutes to give a presentation about your topic. Please maintain eye contact and speak loudly.';
   const SAY_WAIT      = 'Please wait for the examiner to continue.';
 
@@ -575,11 +612,8 @@
     );
   }
 
-  function resetExamToStart(){
-    stopTimer(); stopBeep(); stopSpeak();
-    if(delayTimeout){ clearTimeout(delayTimeout); delayTimeout = null; }
-    spinning = false; advanceLocked = false; partBStage = 'idle';
-    rotation = 0; drawWheel(rotation);
+  /* Reset all cue boxes / timers to their default visual state */
+  function resetAllCuesAndTimers(){
     document.getElementById('cueWelcome').classList.add('hidden');
     document.getElementById('timerA').textContent = '01:00';
     document.getElementById('timerA').classList.remove('alarm');
@@ -598,6 +632,14 @@
     document.getElementById('timerBS1').classList.remove('alarm');
     document.getElementById('statusBS1').textContent = 'Get ready…';
     document.getElementById('cueBS1').classList.add('hidden');
+  }
+
+  function resetExamToStart(){
+    stopTimer(); stopBeep(); stopSpeak();
+    if(delayTimeout){ clearTimeout(delayTimeout); delayTimeout = null; }
+    spinning = false; advanceLocked = false; partBStage = 'idle';
+    rotation = 0; drawWheel(rotation);
+    resetAllCuesAndTimers();
     show('welcome');
   }
 
@@ -652,12 +694,103 @@
     speak('This is the end of the speaking exam. Please hand in your note sheet to the examiner. You may now leave.');
   }
 
+  /* ---------------- Hidden examiner override (Shift + Return) ---------------- */
+  const jumpOverlay = document.getElementById('jumpOverlay');
+  const jumpGrid = document.getElementById('jumpGrid');
+
+  function jumpStageList(){
+    return [
+      { id:'welcome',     label:'Welcome' },
+      { id:'partAIntro',  label:'Part A · Intro' },
+      { id:'partATimer',  label:'Part A · Reading Timer' },
+      { id:'partBIntro',  label:'Part B · Intro' },
+      (examType === 'S2')
+        ? { id:'partBSpin',    label:'Part B · Lucky Draw + Timer' }
+        : { id:'partBTimerS1', label:'Part B · Presentation Timer' },
+      { id:'end',         label:'End of Exam' },
+    ];
+  }
+
+  function buildJumpMenu(){
+    jumpGrid.innerHTML = '';
+    jumpStageList().forEach((s, i)=>{
+      const b = document.createElement('button');
+      b.className = 'jumpBtn';
+      b.innerHTML = '<span class="jumpBtn-num">'+(i+1)+'</span><span class="jumpBtn-lbl">'+s.label+'</span>';
+      b.addEventListener('click', (e)=>{ e.stopPropagation(); closeJumpMenu(); jumpToStage(s.id); });
+      jumpGrid.appendChild(b);
+    });
+  }
+
+  function openJumpMenu(){
+    if(!examType) return;       // only meaningful once an exam is chosen
+    buildJumpMenu();
+    jumpMenuOpen = true;
+    jumpOverlay.classList.remove('hidden');
+    stopSpeak();
+  }
+  function closeJumpMenu(){
+    jumpMenuOpen = false;
+    jumpOverlay.classList.add('hidden');
+  }
+  jumpOverlay.addEventListener('click', (e)=>{
+    if(e.target === jumpOverlay) closeJumpMenu();
+  });
+
+  /* Clean up everything in progress, then set up the requested stage.
+     This intentionally ignores advanceLocked (examiner override). */
+  function cleanupForJump(){
+    stopTimer(); stopBeep(); stopSpeak();
+    if(delayTimeout){ clearTimeout(delayTimeout); delayTimeout = null; }
+    spinning = false; advanceLocked = false; partBStage = 'idle';
+    resetAllCuesAndTimers();
+  }
+
+  function jumpToStage(id){
+    cleanupForJump();
+    switch(id){
+      case 'welcome':
+        goToWelcome();
+        break;
+      case 'partAIntro':
+        show('partAIntro');
+        announceInstruction(SAY_PARTA, document.getElementById('cuePartAIntro'), SAY_CONTINUE);
+        break;
+      case 'partATimer':
+        show('partATimer'); ensureAudio();
+        startReadingTimer();
+        break;
+      case 'partBIntro':
+        show('partBIntro');
+        if(examType === 'S1'){
+          document.getElementById('cuePartBIntroText').innerHTML =
+            'Press <em>Return</em> to start the timer';
+        } else {
+          document.getElementById('cuePartBIntroText').innerHTML =
+            'Press <em>Return</em> to continue';
+        }
+        announceInstruction(SAY_PARTB, document.getElementById('cuePartBIntro'),
+          examType === 'S1' ? SAY_START : SAY_CONTINUE);
+        break;
+      case 'partBSpin':
+        rotation = 0; show('partBSpin'); drawWheel(rotation); ensureAudio(); spinWheel();
+        break;
+      case 'partBTimerS1':
+        show('partBTimerS1'); ensureAudio(); startPresentationTimerS1();
+        break;
+      case 'end':
+        show('end'); speakEnd();
+        break;
+    }
+  }
+
   /* ---------------- Touch / tap support (whole exam area) ---------------- */
   /* A tap anywhere on the exam area behaves exactly like pressing Return.
      advanceLocked already blocks taps during instructions, the 5s read
      delay, and while a timer is running — so students cannot skip ahead. */
   const mainEl = document.getElementById('main');
   function handleTap(e){
+    if(jumpMenuOpen) return;              // override menu handles its own taps
     if(state === 'menu') return;          // menu uses its own S1/S2 buttons
     e.preventDefault();
     advance();
@@ -668,6 +801,27 @@
   document.getElementById('btnS2').addEventListener('click', (e)=>{ e.stopPropagation(); chooseExam('S2'); });
 
   window.addEventListener('keydown', e=>{
+    /* Hidden examiner override: Shift + Return toggles the jump menu.
+       This is the ONLY trigger and it overrides the no-skip lock. */
+    if(e.shiftKey && e.key === 'Enter'){
+      e.preventDefault();
+      if(jumpMenuOpen) closeJumpMenu();
+      else openJumpMenu();
+      return;
+    }
+
+    /* While the override menu is open, capture its own keys */
+    if(jumpMenuOpen){
+      if(e.key === 'Escape'){ e.preventDefault(); closeJumpMenu(); return; }
+      if(/^[1-6]$/.test(e.key)){
+        e.preventDefault();
+        const btns = jumpGrid.querySelectorAll('.jumpBtn');
+        const idx = parseInt(e.key,10) - 1;
+        if(btns[idx]) btns[idx].click();
+      }
+      return; // block all other keys (including plain Enter) while menu open
+    }
+
     if(state === 'menu'){
       if(e.key === '1'){ e.preventDefault(); chooseExam('S1'); }
       else if(e.key === '2'){ e.preventDefault(); chooseExam('S2'); }
