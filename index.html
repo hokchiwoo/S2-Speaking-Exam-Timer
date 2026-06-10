@@ -65,7 +65,7 @@
     transition:background .15s, transform .05s;
   }
   .cue-big:hover{ background:#e2231a; }
-  .cue-big:hover .key-text, .cue-big:hover .key-text em{ color:#fff; }
+  .cue-big:hover .key-text, .cue-big:hover .key-text em, .cue-big:hover .tapArrow{ color:#fff; }
   .cue-big:active{ transform:scale(.97); }
   @keyframes pulseBox{
     0%,100%{ box-shadow:0 0 0 0 rgba(226,35,26,.55); transform:scale(1); }
@@ -73,6 +73,16 @@
   }
   .cue-big .key-text{ font-size:3.4vmin; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#111; line-height:1.1; }
   .cue-big .key-text em{ font-style:normal; color:#e2231a; }
+
+  /* Animated arrow prompting students to press the button */
+  .tapArrow{
+    font-size:4.2vmin; line-height:1; color:#e2231a; font-weight:700;
+    display:inline-block; animation:arrowNudge 0.9s ease-in-out infinite;
+  }
+  @keyframes arrowNudge{
+    0%,100%{ transform:translateX(0); }
+    50%    { transform:translateX(1.1vmin); }
+  }
 
   .cue-static{
     margin-top:4vmin; border:.6vmin solid #111; background:#111; color:#fff; padding:2.4vmin 3.4vmin;
@@ -112,8 +122,6 @@
 
   .footer{ flex:0 0 auto; border-top:2px solid #111; padding:1.2vmin 3vmin; display:flex; justify-content:space-between; font-size:1.4vmin; letter-spacing:1.5px; text-transform:uppercase; color:#888; }
   .hidden{ display:none !important; }
-
-  .tapHint{ margin-top:2.4vmin; font-size:1.5vmin; letter-spacing:2px; text-transform:uppercase; color:#999; }
 </style>
 </head>
 <body>
@@ -149,9 +157,10 @@
 
     <section id="screen-welcome" class="hidden">
       <div class="eyebrow">Examination</div>
-      <h1 id="welcomeTitle">Speaking Exam</h1>
-      <p class="lead">Please wait for the examiner's instructions before you begin.</p>
+      <h1 id="welcomeTitle">Secondary 2 Speaking Exam</h1>
+      <p class="lead">The instructions will be shown on this screen. Please pay attention to the instructions and complete the exam.</p>
       <div class="cue-big hidden" id="cueWelcome">
+        <span class="tapArrow">➜</span>
         <span class="key-text">Press <em>Return</em> to continue</span>
       </div>
     </section>
@@ -164,6 +173,7 @@
         You do not need to finish the whole passage.
       </p>
       <div class="cue-big hidden" id="cuePartAIntro">
+        <span class="tapArrow">➜</span>
         <span class="key-text">Press <em>Return</em> to continue</span>
       </div>
     </section>
@@ -188,6 +198,7 @@
         about your topic. Please maintain eye contact and speak loudly.
       </p>
       <div class="cue-big hidden" id="cuePartBIntro">
+        <span class="tapArrow">➜</span>
         <span class="key-text" id="cuePartBIntroText">Press <em>Return</em> to continue</span>
       </div>
     </section>
@@ -212,6 +223,7 @@
         </div>
       </div>
       <div class="cue-big hidden" id="cueB" style="margin-top:3vmin;">
+        <span class="tapArrow">➜</span>
         <span class="key-text" id="cueBtext">Press <em>Return</em> to continue</span>
       </div>
     </section>
@@ -226,6 +238,7 @@
         </div>
       </div>
       <div class="cue-big hidden" id="cueBS1" style="margin-top:3vmin;">
+        <span class="tapArrow">➜</span>
         <span class="key-text" id="cueBS1text">Press <em>Return</em> to continue</span>
       </div>
     </section>
@@ -541,8 +554,9 @@
   function chooseExam(type){
     examType = type;
     const titleFull = type + ' Speaking Exam';
+    const yearNum = (type === 'S1') ? '1' : '2';
     document.getElementById('examTitle').textContent = titleFull;
-    document.getElementById('welcomeTitle').textContent = titleFull;
+    document.getElementById('welcomeTitle').textContent = 'Secondary ' + yearNum + ' Speaking Exam';
     document.getElementById('footL').textContent = titleFull;
     document.getElementById('footR').textContent = titleFull;
     ensureAudio(); // unlock audio on first user gesture
@@ -553,8 +567,9 @@
      so a restart replays instructions and shows the prompt. */
   function goToWelcome(){
     resetExamToStart();
+    const yearNum = (examType === 'S1') ? '1' : '2';
     announceInstruction(
-      'Welcome to the ' + examType + ' speaking exam. Please wait for the examiner\'s instructions before you begin.',
+      'Secondary ' + yearNum + ' speaking exam. The instructions will be shown on this screen. Please pay attention to the instructions and complete the exam.',
       document.getElementById('cueWelcome'),
       SAY_CONTINUE
     );
