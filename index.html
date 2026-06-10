@@ -123,6 +123,16 @@
   .footer{ flex:0 0 auto; border-top:2px solid #111; padding:1.2vmin 3vmin; display:flex; justify-content:space-between; font-size:1.4vmin; letter-spacing:1.5px; text-transform:uppercase; color:#888; }
   .hidden{ display:none !important; }
 
+  /* ---- Black restart screen (full viewport, hidden from jump menu, no TTS) ---- */
+  #screen-restart{
+    position:fixed; inset:0; z-index:60; background:#000; color:#fff;
+    display:flex; justify-content:center; align-items:center; text-align:center; padding:6vmin;
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  #screen-restart .restartText{
+    font-size:4.4vmin; font-weight:700; line-height:1.35; letter-spacing:.5px; max-width:24ch;
+  }
+
   /* ---- Hidden examiner override / jump menu ---- */
   .jumpOverlay{
     position:fixed; inset:0; background:rgba(17,17,17,.94); z-index:100;
@@ -271,8 +281,13 @@
       <p class="lead">This is the end of the speaking exam.</p>
       <p class="lead">Please hand in your note sheet to the examiner. You may now leave.</p>
       <div class="cue">
-        <span class="key">Return</span> Examiner: press or tap to restart
+        <span class="key">Return</span> Examiner: press or tap to continue
       </div>
+    </section>
+
+    <!-- Black restart screen: hidden from jump menu, never announced -->
+    <section id="screen-restart" class="hidden">
+      <div class="restartText">Examiners please press “Return” to restart timer</div>
     </section>
 
   </main>
@@ -304,6 +319,7 @@
     partBSpin:   document.getElementById('screen-partB-spin'),
     partBTimerS1:document.getElementById('screen-partB-timer-s1'),
     end:         document.getElementById('screen-end'),
+    restart:     document.getElementById('screen-restart'),
   };
   const stepLabel = document.getElementById('stepLabel');
   let state = 'menu';
@@ -326,7 +342,8 @@
 
   const stepNames = {
     menu:'Select Exam', welcome:'Welcome', partAIntro:'Part A', partATimer:'Part A · Timer',
-    partBIntro:'Part B', partBSpin:'Part B · Topic', partBTimerS1:'Part B · Timer', end:'Complete',
+    partBIntro:'Part B', partBSpin:'Part B · Topic', partBTimerS1:'Part B · Timer',
+    end:'Complete', restart:'Restart',
   };
 
   function show(name){
@@ -685,6 +702,11 @@
         if(partBStage === 'done'){ stopTimer(); stopBeep(); show('end'); speakEnd(); }
         break;
       case 'end':
+        /* Go to the black restart screen — no TTS, hidden from jump menu */
+        stopTimer(); stopBeep(); stopSpeak();
+        show('restart');
+        break;
+      case 'restart':
         goToWelcome();
         break;
     }
@@ -699,6 +721,7 @@
   const jumpGrid = document.getElementById('jumpGrid');
 
   function jumpStageList(){
+    /* Note: the black 'restart' screen is intentionally NOT listed here. */
     return [
       { id:'welcome',     label:'Welcome' },
       { id:'partAIntro',  label:'Part A · Intro' },
